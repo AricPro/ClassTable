@@ -1,0 +1,147 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <meta charset="UTF-8">
+<title>Insert title here</title>
+<script src="http://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+<link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+<script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+  </head>
+  
+  <body onload="selectCourse();">
+    <div align="center">
+		<h3><b>课程课表</b></h3>
+		<table style="margin-top:15px;margin-bottom:15px">
+		<tr>
+		<td>学年学期&nbsp;&nbsp;
+			<select name="select" id="select1" class="">
+				<option value="1" autofocus>2016-2017第一学期</option>
+			</select>
+		</td>
+		<td>&nbsp;&nbsp;&nbsp;</td>
+		<td>
+			课程&nbsp;&nbsp;
+			<input type="coursename" id = "coursename" name="coursename"  oninput="changeCourseList()" size="10">
+			&nbsp;&nbsp;
+			<select id="Semesters" name="Semesters">
+			</select>
+		</td>
+		<td>&nbsp;&nbsp;&nbsp;</td>
+		<td>
+			验证码&nbsp;&nbsp;
+			<img src="/ClassTable/validate" width="50px" height="25px" id="img">
+			<input type="text" id="validata" name="validata" size="6">
+		</td>
+		<td>&nbsp;&nbsp;&nbsp;</td>
+		<td>
+			<input type="submit" name="检索" onclick="selectTable()" />
+			<button name="dayin">打印</button>
+		</td>
+		</tr>
+		</table>
+	</div>
+	<div style="text-align:center">
+		<h4 align="center"><b>重庆工程学院课程课表</b></h4>
+		<table border="1" align="center" style="margin-top:15px" class="table table-hover" id="tableList">
+			<tr>
+				<td>任课教师</td>
+				<td>上课班号</td>
+				<td>上课人数</td>
+				<td>课程类别</td>
+				<td>考核方式</td>
+				<td>上课班级构成</td>
+				<td>周次</td>
+				<td>节次</td>
+				<td>地点</td>
+			</tr>
+		</table>
+	</div>
+	
+<script type="text/javascript">
+
+function changeCourseList(){
+	var coursename = $("#coursename").val();
+	$.ajax({
+		type : "post",
+		url : "/IntegrateDemo/getCourselistmapChange?coursename="+coursename,
+		cache : false,
+		async : false,
+		dataType : "json",
+		success : function(data, textStatus, jqXHR) {
+			 $('#Semesters').empty();  
+	          $('#Semesters').append("<option >--请选择课程信息--</option>");  
+	            for(var i in data){  
+	                $('#Semesters').append("<option value='"+data[i]+"'>"+i+"</option>");  
+	            }  
+			
+		}
+	});
+}
+
+function selectCourse() {
+	$.ajax({
+		type : "get",
+		url : "/ClassTable/getInfo/findCourseList",
+		cache : false,
+		async : false,
+		dataType : "json",
+		success : function(data, textStatus, jqXHR) {
+			 $('#Semesters').empty();  
+	          $('#Semesters').append("<option >--请选择课程信息--</option>");  
+	            for(var i in data){
+	                var table=data[i];  
+	                $('#Semesters').append("<option value='"+table.courseId+"'>"+table.courseName+"</option>");  
+	            }  
+		}
+	});
+}
+	 	function createTable(res){
+	 		$("#tableList tr:not(:first)").empty();
+			for(var i in res){
+				var table=res[i];
+				$("<tr>").append($("<td>").text(table.teacher_name))
+				.append($("<td>").text(table.class_num))
+				.append($("<td>").text(table.num))
+				.append($("<td>").text(table.course_name))
+				.append($("<td>").text(table.checkway))
+				.append($("<td>").text(table.constitute))
+				.append($("<td>").text(table.week_time))
+				.append($("<td>").text(table.class_time))
+				.append($("<td>").text(table.site))
+				.appendTo($("#tableList"));
+			}
+		}
+	 	function selectTable() {
+	 		var coursevalue = $('#Semesters option:selected') .val();
+	 		var validate = $("#validata").val();
+	 		var param = "Sel_XNXQ=20160&Sel_KC="+coursevalue+"&gs=2&txt_yzm="+validate;
+	 		if (validata == '' || validata == null) {
+	 			alert("输入验证码");
+	 			return;
+	 		}
+	 		$.ajax({
+	 			type : "GET",
+	 			url : "/ClassTable/getInfo/getClassTable",
+	 			contentType: "application/json",
+	 			data : {
+	 				"param" : param,
+	 				"coursevalue": coursevalue
+	 			},
+	 			cache : false,
+	 			async : false,
+	 			dataType : "json",
+	 			success : function(data) {
+	 				createTable(data)
+	 			}
+	 		});
+	 	}
+		function imagechg() {
+			$("#img").attr("src", "/ClassTable/validate" + '?' + new Date());
+		}
+	</script>
+  </body>
+</html>
